@@ -1,0 +1,46 @@
+%div#container
+
+:javascript
+  $(function () {
+   var chart = new Highcharts.Chart({
+      chart: {
+        renderTo: 'container',
+        defaultSeriesType: 'scatter',
+        width: 800
+    },
+    title:    { text: 'Predicted v. actual temperatures' },
+    subtitle: { text: 'Sydney, Observatory Hill' },
+    credits:  { enabled: false },
+    xAxis:    {
+               type: 'datetime',
+               title: { text: 'Date' }
+              },
+    yAxis:    {
+             title:
+                   { text: 'Temperature °C' }
+              },
+    legend:   {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle'
+              },
+    series: [
+           {
+            data: #{@amin.inspect.gsub(/"/, "")},
+            name: 'actual minimum'
+           },
+           {
+            data: #{@pmin.inspect.gsub(/"/, "")},
+            name: 'predicted minimum'
+           },
+           {
+            data: #{@amax.inspect.gsub(/"/, "")},
+            name: 'actual maximum'
+           },
+           {
+            data: #{@pmax.inspect.gsub(/"/, "")},
+            name: 'predicted maximum'
+           }
+          ]
+  });
+  });

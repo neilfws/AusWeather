@@ -1,0 +1,14 @@
+!!! XML
+!!!
+
+%html
+  %head
+    %title BoM
+    = javascript_script_tag "/javascripts/jquery-latest.js"
+    = javascript_script_tag "/javascripts/highcharts.js"
+    = javascript_script_tag "/javascripts/exporting.js"
+    = javascript_script_tag "/javascripts/grid.js"
+    = stylesheet_link_tag "/css/main.css"
+  %body
+    %div
+      = yield

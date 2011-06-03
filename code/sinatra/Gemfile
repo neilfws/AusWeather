@@ -1,0 +1,5 @@
+source :gemcutter
+gem 'sinatra'
+gem 'sinatra-static-assets'
+gem 'mongo'
+gem 'haml'
