@@ -17,6 +17,8 @@ def get_yesterday(url)
     ts.gsub!("EST", "+10:00")
     temps = data['observations']['data'].map { |obs| [obs['local_date_time_full'], obs['air_temp']] }
     temps.reject! {|t| Date.today - Date.parse(t[0]) != 1}
+    # remove nil values
+    temps.reject! {|t| t[1].nil?}
     min = temps.min_by { |t| t[1] }
     max = temps.max_by { |t| t[1] }
     record = {'timestamp' => DateTime.parse(ts).to_s, 'date' => (Date.today - 1).to_s,
@@ -57,11 +59,13 @@ end
 
 # save to db
 observed  = get_yesterday("http://www.bom.gov.au/fwo/IDN60901/IDN60901.94768.json")
+#puts observed.inspect
 if observed.count == 6
   col.save(observed)
 end
 
 predicted = get_predictions("http://www.bom.gov.au/fwo/IDN10064.txt")
+# puts predicted.inspect
 predicted.each do |p|
   if p.count == 6
     col.save(p)
