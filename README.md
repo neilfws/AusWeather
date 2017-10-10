@@ -1,3 +1,3 @@
-# BoMStats
+# AusWeather
 
-Analysis of Australia's BoM data.
+Analysis of Australian weather data from various sources (BoM, WU).
