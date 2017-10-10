@@ -1,0 +1,55 @@
+---
+title: "How good are BoM's temperature predictions?"
+author: "Neil Saunders"
+date: "25/02/2015"
+output: html_document
+---
+```{r ref.label="setup", echo=FALSE, cache=TRUE, warning=FALSE, message=FALSE}
+```
+
+## Introduction
+
+## 1. Getting the data
+```{r data, tidy=TRUE, cache=TRUE}
+setwd("~/Dropbox/projects/bom")
+
+d <- fromJSON(file = "data/bom.json")
+d <- ldply(d$rows, function(x) as.data.frame(x))
+```
+
+## 2. Data processing
+```{r process, tidy=TRUE, cache=TRUE}
+pmin.min <- aggregate(min~date, subset(d, predicted == 1), min)
+pmin.max <- aggregate(min~date, subset(d, predicted == 1), max)
+pmin.med <- aggregate(min~date, subset(d, predicted == 1), median)
+pmin.cnt <- aggregate(min~date, subset(d, predicted == 1), length)
+
+pmax.min <- aggregate(max~date, subset(d, predicted == 1), min)
+pmax.max <- aggregate(max~date, subset(d, predicted == 1), max)
+pmax.med <- aggregate(max~date, subset(d, predicted == 1), median)
+pmax.cnt <- aggregate(max~date, subset(d, predicted == 1), length)
+
+all <- join(pmin.min, pmin.max, by = "date")
+all <- join(all, pmin.med, by = "date")
+all <- join(all, pmin.cnt, by = "date")
+all <- join(all, subset(d, predicted == 0)[, c("date", "min")], by = "date")
+
+all <- join(all, pmax.min, by = "date")
+all <- join(all, pmax.max, by = "date")
+all <- join(all, pmax.med, by = "date")
+all <- join(all, pmax.cnt, by = "date")
+all <- join(all, subset(d, predicted == 0)[, c("date", "max")], by = "date")
+
+colnames(all)[2:11] <- c("pmin.min", "pmin.max", "pmin.med", "pmin.cnt", "min", 
+                         "pmax.min", "pmax.max", "pmax.med", "pmax.cnt", "max")
+head(all)
+```
+
+## Setup and functions
+```{r setup, tidy=TRUE, eval=FALSE}
+library(plyr)
+library(RCurl)
+library(rjson)
+library(reshape)
+library(ggplot2)
+```
