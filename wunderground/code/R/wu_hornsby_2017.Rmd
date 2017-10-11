@@ -1,0 +1,61 @@
+---
+title: "Winter rainfall in Sydney 2017"
+author: "Neil Saunders"
+date: "compiled `r Sys.time()`"
+output: 
+  html_document: 
+    keep_md: yes
+    number_sections: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache = FALSE, message = FALSE, warning = FALSE, fig.path = "../../figures/")
+library(tidyverse)
+library(lubridate)
+
+theme_set(theme_bw())
+
+# HH data from the rwundergound package
+wu_hh <- readRDS("../../data/wu_hh.rds")
+```
+
+# Introduction
+It feels like the winter and spring of 2017 in Sydney were exceptionally dry. Does data back up this feeling?
+
+# Read and transform the data
+Unfortunately, `rwunderground::history_range()` is returning NA values for many variables, including rainfall:
+
+```{r hh-data}
+wu_hh %>%
+  glimpse()
+```
+
+So data for the Hornsby personal weather station (INEWSOUT879) was copy-pasted from the Weather Underground website into a text file, so requires some additional processing.
+
+```{r read-data}
+hornsby <- read_delim("../../data/hornsby.txt", "\t", escape_double = FALSE, 
+                      col_names = FALSE, trim_ws = TRUE)
+
+hornsby <- hornsby %>%
+  mutate(date = c(paste("2017", "01", 1:31, sep = "-"), paste("2017", "02", 1:28, sep = "-"), paste("2017", "03", 1:31, sep = "-"), paste("2017", "04", 1:30, sep = "-"), paste("2017", "05", 1:31, sep = "-"), paste("2017", "06", 1:30, sep = "-"), paste("2017", "07", 1:31, sep = "-"), paste("2017", "08", 1:31, sep = "-"), paste("2017", "09", 1:16, sep = "-"), paste("2017", "09", 21:30, sep = "-"), paste("2017", "01", 1:9, sep = "-")),
+         date = as.Date(date)) %>%
+  rename(day = X1, temp_high = X2, temp_mean = X3, temp_low = X4, dew_high = X5, 
+         dew_mean = X6, dew_low = X7, humidity_high = X8, humidity_mean = X9, humidity_low = X10,
+         windspeed_high = X11, windspeed_mean = X12, windspeed_gust = X13, pressure_high = X14,
+         pressure_mean = X15, pressure_low = X16, precip_total = X17)
+```
+
+# Plot the data
+```{r plot-data}
+hornsby %>% 
+  ggplot(aes(date, precip_total)) + 
+    geom_line(color = "#0089a8") + 
+    labs(x = "Date", y = "precipitation (mm)", 
+         title = "Precipitation Jan - Oct 2017", 
+         subtitle = "source: WU INEWSOUT879") + 
+    theme_light() + 
+    scale_x_date(date_breaks = "1 month", date_labels = "%b")
+```
+
+# Conclusion
+Very little significant rainfall was measured between April and the beginning of October. So yes: our feeling that "it hasn't rained for months" is correct.
