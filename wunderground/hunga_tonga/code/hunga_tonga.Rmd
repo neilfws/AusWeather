@@ -1,0 +1,69 @@
+---
+title: "Detecting the 2022 Hunga Tonga eruption pressure wave in PWS data"
+author: "Neil Saunders"
+date: "compiled `r Sys.time()`"
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(jsonlite)
+library(lubridate)
+
+theme_set(theme_bw())
+```
+
+# Summary
+The Hunga Tonga eruption of January 15 2022 sent a pressure wave around the earth.
+
+This document looks for the wave in atmospheric pressure data from local personal weather stations.
+
+# Data
+The function `json2df` takes a PWS ID, date and API key, retrieves data for that date in JSON format and returns a data frame.
+
+```{r json2df}
+json2df <- function(id, date, key) {
+  u <- paste0("https://api.weather.com/v2/pws/history/all?stationId=", id, "&format=json&units=m&date=", date, "&apiKey=", key)
+  u %>% 
+    fromJSON() %>% 
+    .$observations %>% 
+    as_tibble() %>% 
+    unnest(cols = c(metric))
+}
+```
+
+
+```{r get-data}
+apikey <- Sys.getenv('WUNDERGROUNDID')
+
+stations <- c("ISYDNE1319", "ISYDNE290", "INSWMOUN16", "ISYDNEY156", 'ISYDNE1793', "ISYDNE1727")
+
+wudata <- lapply(stations, function(x) json2df(x, "20220115", apikey)) %>% 
+  bind_rows()
+```
+
+# Visualisation
+The pressure wave is visible as a spike beginning just after 6 PM.
+
+The eruption occurred at around 3:15 PM Sydney time. Sydney to Tonga is approximately 3 500 km. Assuming the standard speed of sound (343 m s$^-1$), we expect a travel time of `r 3500 / 0.343 / 60 / 60` hours. This is consistent with the time of the spike.
+
+```{r plot-data}
+wudata %>% 
+  mutate(dt = ymd_hms(obsTimeLocal)) %>%
+  ggplot(aes(dt, pressureMax)) + 
+  geom_line() + 
+  facet_grid(stationID ~ ., scales = "free_y") + 
+  scale_x_datetime(breaks = "3 hours", date_labels = "%H:%M") +
+  labs(x = "Time",
+       y = "Max Pressure (hPa)",
+       title = "Air pressure at 6 personal weather stations in Hornsby Heights",
+       subtitle = "January 15 2022") +
+  theme(strip.text = element_text(size = 6))
+```
+
